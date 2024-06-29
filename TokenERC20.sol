@@ -169,7 +169,7 @@ contract TokenERC20 is
         return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
     }
 
-    /// @dev Mints tokens according to the provided mint request.
+    /// @dev مints tokens according to the provided mint request.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature) external payable nonReentrant {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
@@ -225,75 +225,4 @@ contract TokenERC20 is
             : _req.primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, _req.price - platformFees);
-    }
-
-    /// @dev Mints `amount` of tokens to `to`
-    function _mintTo(address _to, uint256 _amount) internal {
-        _mint(_to, _amount);
-        emit TokensMinted(_to, _amount);
-    }
-
-    /// @dev Verifies that a mint request is valid.
-    function verifyRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address) {
-        (bool success, address signer) = verify(_req, _signature);
-        require(success, "invalid signature");
-
-        require(
-            _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
-            "request expired"
-        );
-        require(_req.to != address(0), "recipient undefined");
-        require(_req.quantity > 0, "zero quantity");
-
-        minted[_req.uid] = true;
-
-        return signer;
-    }
-
-    /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
-    }
-
-    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
-    function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
-        return
-            abi.encode(
-                TYPEHASH,
-                _req.to,
-                _req.primarySaleRecipient,
-                _req.quantity,
-                _req.price,
-                _req.currency,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
-                _req.uid
-            );
-    }
-
-    /// @dev Sets contract URI for the storefront-level metadata of the contract.
-    function setContractURI(string calldata _uri) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        contractURI = _uri;
-    }
-
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
-        returns (address sender)
-    {
-        return ERC2771ContextUpgradeable._msgSender();
-    }
-
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
-        return ERC2771ContextUpgradeable._msgData();
-    }
-}
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), sale
